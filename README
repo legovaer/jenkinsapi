@@ -1,0 +1,8 @@
+Jenkins module for Drupal.
+
+This API module allows you to integrate Jenkins jobs with your Drupal site.
+The modules doesn't expose any UI.  Developers can use this module to easily 
+integrate Jenkins with their module.  A common use case is rules actions
+which call this code.
+
+Development of the Jenkins API module was sponsored by Technocrat.

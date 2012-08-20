@@ -1,0 +1,3 @@
+name = Jenkins
+description = Provide user interface for Jenkins jobs.
+core = 7.x

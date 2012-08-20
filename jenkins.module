@@ -1,0 +1,119 @@
+<?php
+/**
+ * @file
+ * Provides integration with Jenkins for jobs management.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function jenkins_menu() {
+  $items = array();
+
+  // This moudle doesn't provide a UI
+
+  return $items;
+}
+
+/**
+ * Get a list of jobs.
+ *
+ * @param $depth
+ *   Integer that tells how much data to get from Jenkins.
+ * @param $tree
+ *   Array describing what data to return. It should be on the form.
+ */
+function jenkins_get_jobs($depth = 0, $tree = NULL) {
+  // @todo: honor $tree arguments.
+  $query = array(
+    'depth' => $depth,
+  );
+  return jenkins_request('/api/json', $query);
+}
+
+/**
+ * Get a single job.
+ *
+ * @param $name
+ *   Job name.
+ */
+function jenkins_get_job($name) {
+  return jenkins_request('/job/' . $name . '/api/json');
+}
+
+/**
+ * Create a job.
+ *
+ * @param $name
+ *   Job name.
+ * @param $xml
+ *   XML string with job properties (config.xml).
+ */
+function jenkins_create_job($name, $xml) {
+  $query = array(
+    'name' => $name,
+  );
+  $headers = array(
+    'Content-Type' => 'text/xml',
+  );
+  return jenkins_request('/createItem', $query, 'POST', $xml, $headers);  
+}
+
+/**
+ * Copy/clone a job.
+ *
+ * @param $name
+ *   Job name.
+ * @param $existing
+ *   Job name of the job to copy.
+ */
+function jenkins_copy_job($name, $existing) {
+  $query = array(
+    'name' => $name,
+    'mode' => 'copy',
+    'from' => $existing,
+  );
+  $headers = array(
+    'Content-Type' => 'text/xml',
+  );
+  return jenkins_request('/createItem', $query, 'POST', NULL, $headers);
+}
+
+/**
+ * Perform a request to Jenkins server and return the response.
+ *
+ * @param $path
+ *   API path with leading slash, e.g. '/api/json'.
+ * @param $query
+ *   Array with data to be sent as query string.
+ * @param $method
+ *   HTTP method, either 'GET' (default) or 'POST'.
+ * @param $data
+ *   Post data.
+ * @param $headers
+ *   HTTP headers.
+ *
+ * return
+ *   Object with results from the server. Or FALSE on failure.
+ */
+function jenkins_request($path, $query = array(), $method = 'GET', $data = NULL, $headers = array()) {
+  $url = variable_get('jenkins_base_url', 'http://localhost:8080') . $path;
+  $options = array(
+    'method' => $method,
+  );
+  if (!empty($query)) {
+    $url .= '?'. drupal_http_build_query($query);
+  }
+  if ($method == 'POST' && !empty($data)) {
+    $options['data'] = $data;
+  }
+  if (!empty($headers)) {
+    $options['headers'] = $headers;
+  }
+
+  // Do HTTP request and get response object.
+  $response = drupal_http_request($url, $options);
+
+  // Response code should be something between 200 and 202.
+  return in_array($response->code, range(200, 202)) ? drupal_json_decode($response->data) : FALSE;
+}
