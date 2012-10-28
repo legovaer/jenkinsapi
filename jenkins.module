@@ -10,7 +10,7 @@
 function jenkins_menu() {
   $items = array();
 
-  // This moudle doesn't provide a UI
+  // @todo: add UI menu items.
 
   return $items;
 }
@@ -24,7 +24,7 @@ function jenkins_menu() {
  *   Array describing what data to return. It should be on the form.
  */
 function jenkins_get_jobs($depth = 0, $tree = NULL) {
-  // @todo: honor $tree arguments.
+  // @todo: honor $depth and $tree arguments.
   $query = array(
     'depth' => $depth,
   );
