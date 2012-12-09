@@ -16,6 +16,19 @@ function jenkins_menu() {
 }
 
 /**
+ * Implements hook_permission().
+ */
+function jenkins_permission() {
+  $perms = array();
+
+  $perms['administer jenkins requests'] = array(
+    'title' => t('Administer Jenkins Requests'),
+  );
+
+  return $perms;
+}
+
+/**
  * Get a list of jobs.
  *
  * @param $depth
@@ -97,13 +110,18 @@ function jenkins_copy_job($name, $existing) {
  *   Object with results from the server. Or FALSE on failure.
  */
 function jenkins_request($path, $query = array(), $method = 'GET', $data = NULL, $headers = array()) {
-  $url = variable_get('jenkins_base_url', 'http://localhost:8080') . $path;
+  $url = variable_get('jenkins_base_url', 'http://localhost:8080/') . $path;
   $options = array(
     'method' => $method,
   );
-  if (!empty($query)) {
-    $url .= '?'. drupal_http_build_query($query);
+
+  // Force request to start immediately.
+  if (!isset($query['delay'])) {
+    $query['delay'] = '0sec';
   }
+
+  $url .= '?'. drupal_http_build_query($query);
+
   if ($method == 'POST' && !empty($data)) {
     $options['data'] = $data;
   }
