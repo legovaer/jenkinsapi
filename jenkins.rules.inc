@@ -15,6 +15,23 @@ function jenkins_rules_action_info() {
     'access callback' => 'jenkins_rules_integration_access',
   );
 
+  $actions['jenkins_job_build'] = $defaults + array(
+    'label' => t('Trigger Build'),
+    'base' => 'jenkins_rules_job_build',
+    'parameter' => array(
+      'name' => array(
+        'type' => 'text',
+        'label' => t('Job name'),
+      ),
+      'params' => array(
+        'type' => 'text',
+        'label' => t('Parameters'),
+        'description' => t('The values for parameterized jobs as a json object. Leave empty for non parameterized jobs.'),
+        'optional' => TRUE,
+      ),
+    ),
+  );
+
   $actions['jenkins_create_job'] = $defaults + array(
     'label' => t('Create a new job'),
     'base' => 'jenkins_rules_create_job',
@@ -46,7 +63,7 @@ function jenkins_rules_action_info() {
   );
 
   $actions['jenkins_request'] = $defaults + array(
-    'label' => t('Make an arbitrary request'),
+    'label' => t('Make an arbitrary request (DEPRECATED)'),
     'base' => 'jenkins_rules_request',
     'parameter' => array(
       'path' => array(
@@ -100,13 +117,32 @@ function jenkins_rules_copy_job($new, $existing) {
 }
 
 /**
+ * Triggers the build of a job.
+ */
+function jenkins_rules_job_build($name, $params) {
+  $data = NULL;
+  $params = trim($params);
+
+  // Ensure we have a valid data.
+  if (strlen($params)) {
+    $json = drupal_json_decode($params);
+    if (NULL !== $json) {
+      $data = $json;
+    }
+  }
+
+  jenkins_job_build($name, $data);
+}
+
+/**
  * Performs an arbitrary request.
  */
 function jenkins_rules_request($path, $query_xml, $method, $data, $headers_xml) {
+  $response = NULL;
   $query = _jenkins_xml_to_array($query_xml);
   $headers = _jenkins_xml_to_array($headers_xml);
 
-  jenkins_request($path, $query, $method, $data, $headers);
+  jenkins_request($path, $response, $query, $method, $data, $headers);
 }
 
 /**

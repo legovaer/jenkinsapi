@@ -9,9 +9,6 @@
  */
 function jenkins_menu() {
   $items = array();
-
-  // @todo: add UI menu items.
-
   return $items;
 }
 
@@ -29,47 +26,28 @@ function jenkins_permission() {
 }
 
 /**
- * Get a list of jobs.
+ * Trigger a build for a jenkins job.
  *
- * @param $depth
- *   Integer that tells how much data to get from Jenkins.
- * @param $tree
- *   Array describing what data to return. It should be on the form.
- */
-function jenkins_get_jobs($depth = 0, $tree = NULL) {
-  // @todo: honor $depth and $tree arguments.
-  $query = array(
-    'depth' => $depth,
-  );
-  return jenkins_request('/api/json', $query);
-}
-
-/**
- * Get a single job.
- *
- * @param $name
+ * @param $job
  *   Job name.
  */
-function jenkins_get_job($name) {
-  return jenkins_request('/job/' . $name . '/api/json');
-}
+function jenkins_job_build($job, $params = NULL, &$response = NULL) {
+  if (!jenkins_is_job_name_valid($job)) {
+    return FALSE;
+  }
 
-/**
- * Create a job.
- *
- * @param $name
- *   Job name.
- * @param $xml
- *   XML string with job properties (config.xml).
- */
-function jenkins_create_job($name, $xml) {
-  $query = array(
-    'name' => $name,
-  );
-  $headers = array(
-    'Content-Type' => 'text/xml',
-  );
-  return jenkins_request('/createItem', $query, 'POST', $xml, $headers);  
+  $data = array();
+  if (is_array($params)) {
+    $data = array('parameter' => array());
+    foreach ($params as $name => $value) {
+      $data['parameter'][] = array('name' => $name, 'value' => $value);
+    }
+  }
+
+  $json = 'json=' . json_encode($data);
+  $headers = array('Content-Type' => 'application/x-www-form-urlencoded');
+
+  return jenkins_request("/job/{$job}/build", $response, array(), 'POST', $json, $headers);
 }
 
 /**
@@ -80,16 +58,185 @@ function jenkins_create_job($name, $xml) {
  * @param $existing
  *   Job name of the job to copy.
  */
-function jenkins_copy_job($name, $existing) {
+function jenkins_job_copy($name, $existing, &$response = NULL) {
+  if (!jenkins_is_job_name_valid($name) || !jenkins_is_job_name_valid($existing)) {
+    return FALSE;
+  }
+
   $query = array(
     'name' => $name,
     'mode' => 'copy',
     'from' => $existing,
   );
+
+  $headers = array(
+    'Accept' => 'application/json',
+    'Content-Type' => 'application/json',
+  );
+
+  return jenkins_request('/createItem', $response, $query, 'POST', NULL, $headers);
+}
+
+/**
+ * Create a job.
+ *
+ * @param $name
+ *   Job name.
+ * @param $xml
+ *   XML string with job properties (config.xml).
+ */
+function jenkins_job_create($name, $xml, &$response = NULL) {
+  if (!jenkins_is_job_name_valid($name)) {
+    return FALSE;
+  }
+
+  $query = array(
+    'name' => $name,
+  );
+
   $headers = array(
     'Content-Type' => 'text/xml',
   );
-  return jenkins_request('/createItem', $query, 'POST', NULL, $headers);
+
+  return jenkins_request('/createItem', $response, $query, 'POST', $xml, $headers);  
+}
+
+/**
+ * Deletes a job.
+ *
+ * @param $name
+ *   Job name.
+ */
+function jenkins_job_delete($name, &$response = NULL) {
+  if (!jenkins_is_job_name_valid($name)) {
+    return FALSE;
+  }
+
+  return jenkins_request("/job/{$name}/doDelete", $response, array(), 'POST');
+}
+
+/**
+ * Disables a job.
+ *
+ * @param $name
+ *   Job name.
+ */
+function jenkins_job_disable($name, &$response = NULL) {
+  if (!jenkins_is_job_name_valid($name)) {
+    return FALSE;
+  }
+
+  return jenkins_request("/job/{$name}/disable", $response, array(), 'POST');
+}
+
+/**
+ * Enables a job.
+ *
+ * @param $name
+ *   Job name.
+ */
+function jenkins_job_enable($name, &$response = NULL) {
+  if (!jenkins_is_job_name_valid($name)) {
+    return FALSE;
+  }
+
+  return jenkins_request("/job/{$name}/enable", $response, array(), 'POST');
+}
+
+/**
+ * Get a single job.
+ *
+ * @param $name
+ *   Job name.
+ */
+function jenkins_job_get($name, &$response = NULL) {
+  if (!jenkins_is_job_name_valid($name)) {
+    return FALSE;
+  }
+
+  if (jenkins_request("/job/{$name}/api/json", $response)) {
+    return json_decode($response->data);
+  }
+
+  return FALSE;
+}
+
+/**
+ * Update an existing job.
+ *
+ * @param $name
+ *   Job name.
+ * @param $xml
+ *   XML string with job properties (config.xml).
+ */
+function jenkins_job_update($name, $xml, &$response = NULL) {
+  if (!jenkins_is_job_name_valid($name)) {
+    return FALSE;
+  }
+
+  $headers = array(
+    'Content-Type' => 'text/xml',
+  );
+
+  return jenkins_request("/job/{$name}/config.xml", $response, array(), 'POST', $xml, $headers);  
+}
+
+/**
+ * Get a list of jobs.
+ *
+ * @param $depth
+ *   Integer that tells how much data to get from Jenkins.
+ * @param $tree
+ *   Array describing what data to return. It should be on the form.
+ */
+function jenkins_jobs_get($depth = 0, $tree = NULL, &$response = NULL) {
+  // @todo: honor $tree argument.
+  $query = array(
+    'depth' => $depth,
+  );
+
+  if (jenkins_request('/api/json', $response, $query)) {
+    return json_decode($response->data);
+  }
+
+  return FALSE;
+}
+
+/**
+ * Validates a jenkins job name.
+ *
+ * Based on Hudson.java.checkGoodName() and java's native Character.isISOControl().
+ *
+ * @param String $name
+ *   The name of the job to validate.
+ *
+ * @return bool
+ *   Is the name valid?
+ */
+function jenkins_is_job_name_valid($name) {
+  if (preg_match('~(\\?\\*/\\\\%!@#\\$\\^&\|<>\\[\\]:;)+~', $name)) {
+    return FALSE;
+  }
+
+  // Define range of non printable characters.
+  $non_print_high = 31;
+
+  // Value PHP assigns if invalid or extended ascii character (? == 63).
+  $ascii_garbage = 63;
+
+  $len = drupal_strlen($name);
+  for ($i = 0; $len > $i; ++$i) {
+    // Unicode char to ord logic lifted from http://stackoverflow.com/questions/1365583/how-to-get-the-character-from-unicode-value-in-php
+    $char = drupal_substr($name, $i, 1);
+    $unpacked = unpack('N', mb_convert_encoding($char, 'UCS-4BE', 'UTF-8'));
+    $ord = $unpacked[1];
+
+    if ($ord <= $non_print_high || $ord == $ascii_garbage) {
+      return FALSE;
+    }
+  }
+
+  return TRUE;
 }
 
 /**
@@ -109,8 +256,8 @@ function jenkins_copy_job($name, $existing) {
  * return
  *   Object with results from the server. Or FALSE on failure.
  */
-function jenkins_request($path, $query = array(), $method = 'GET', $data = NULL, $headers = array()) {
-  $url = variable_get('jenkins_base_url', 'http://localhost:8080/') . $path;
+function jenkins_request($path, &$response = NULL, $query = array(), $method = 'GET', $data = NULL, $headers = array()) {
+  $url = variable_get('jenkins_base_url', 'http://localhost:8080') . $path;
   $options = array(
     'method' => $method,
   );
@@ -125,6 +272,14 @@ function jenkins_request($path, $query = array(), $method = 'GET', $data = NULL,
   if ($method == 'POST' && !empty($data)) {
     $options['data'] = $data;
   }
+
+  // Default to JSON unless otherwise specified.
+  $default_headers = array(
+    'Accept' => 'application/json',
+    'Content-Type' => 'application/json',
+  );
+  $headers += $default_headers;
+
   if (!empty($headers)) {
     $options['headers'] = $headers;
   }
@@ -133,5 +288,52 @@ function jenkins_request($path, $query = array(), $method = 'GET', $data = NULL,
   $response = drupal_http_request($url, $options);
 
   // Response code should be something between 200 and 202.
-  return in_array($response->code, range(200, 202)) ? drupal_json_decode($response->data) : FALSE;
+  return in_array($response->code, range(200, 202));
 }
+
+// DEPRECATED FUNCTIONS
+
+/**
+ * Backwards compatible wrapper for jenkins_jobs_get() function.
+ *
+ * @see jenkins_jobs_get().
+ * @deprecated
+ */
+function jenkins_get_jobs($depth = 0, $tree = NULL) {
+  trigger_error(t('Call to deprecated function jenkins_get_jobs(). Use jenkins_jobs_get().'), E_USER_DEPRECATED);
+  return jenkins_jobs_get($depth, $tree);
+}
+
+/**
+ * Backwards compatible wrapper for jenkins_job_get() function.
+ *
+ * @see jenkins_job_get().
+ * @deprecated
+ */
+function jenkins_get_job($name) {
+  trigger_error(t('Call to deprecated function jenkins_get_job(). Use jenkins_job_get().'), E_USER_DEPRECATED);
+  return jenkins_job_get($name);
+}
+
+/**
+ * Backwards compatible wrapper for jenkins_job_create() function.
+ *
+ * @see jenkins_job_create().
+ * @deprecated
+ */
+function jenkins_create_job($name, $xml) {
+  trigger_error(t('Call to deprecated function jenkins_create_job(). Use jenkins_job_create().'), E_USER_DEPRECATED);
+  return jenkins_job_create($name, $xml);
+}
+
+/**
+ * Backwards compatible wrapper for jenkins_job_copy() function.
+ *
+ * @see jenkins_job_copy().
+ * @deprecated
+ */
+function jenkins_copy_job($name, $existing) {
+  trigger_error(t('Call to deprecated function jenkins_copy_job(). Use jenkins_job_copy().'), E_USER_DEPRECATED);
+  return jenkins_job_copy($name, $existing);
+}
+
