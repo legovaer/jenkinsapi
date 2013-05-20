@@ -26,7 +26,7 @@ function jenkins_rules_action_info() {
       'params' => array(
         'type' => 'text',
         'label' => t('Parameters'),
-        'description' => t('The values for parameterized jobs as a json object. Leave empty for non parameterized jobs.'),
+        'description' => t('The values for parameterized jobs. Each argument should be a separate line with the following format KEY=value. Leave empty for non parameterized jobs.'),
         'optional' => TRUE,
       ),
     ),
@@ -125,7 +125,7 @@ function jenkins_rules_job_build($name, $params) {
 
   // Ensure we have a valid data.
   if (strlen($params)) {
-    $json = drupal_json_decode($params);
+    $json = jenkins_parse_args($params);
     if (NULL !== $json) {
       $data = $json;
     }

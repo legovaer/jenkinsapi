@@ -291,6 +291,28 @@ function jenkins_request($path, &$response = NULL, $query = array(), $method = '
   return in_array($response->code, range(200, 202));
 }
 
+/**
+ * Parse job configuration arguments string into an array.
+ *
+ * @params string $args
+ *   The configuration arguments to parse.
+ *
+ * @return array
+ *   The arguments as an array.
+ */
+function jenkins_parse_args($args) {
+  $values = array();
+
+  $list = explode("\n", $args);
+  $list = array_map('trim', $list);
+  foreach ($list as $line) {
+    $parts = explode('=', $line, 2);
+    $values[$parts[0]] = $parts[1];
+  }
+
+  return $values;
+}
+
 // DEPRECATED FUNCTIONS
 
 /**
@@ -336,4 +358,3 @@ function jenkins_copy_job($name, $existing) {
   trigger_error(t('Call to deprecated function jenkins_copy_job(). Use jenkins_job_copy().'), E_USER_DEPRECATED);
   return jenkins_job_copy($name, $existing);
 }
-
