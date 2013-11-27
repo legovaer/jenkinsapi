@@ -37,10 +37,10 @@ function jenkins_job_build($job, $params = NULL, &$response = NULL) {
   }
 
   $data = array();
-  if (is_array($params)) {
+  if (is_array($params) && count($params)) {
     $data = array('parameter' => array());
     foreach ($params as $name => $value) {
-      $data['parameter'][] = array('name' => $name, 'value' => $value);
+      $data['parameter'][] = array('name' => urlencode($name), 'value' => urlencode($value));
     }
   }
 
