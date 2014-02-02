@@ -41,6 +41,22 @@ function jenkins_permission() {
 }
 
 /**
+ * Get a single build.
+ *
+ * @param string $name
+ *   Job name.
+ * @param int $number
+ *    build number
+ */
+function jenkins_build_get($name, $number, &$response = NULL) {
+  if (!jenkins_is_job_name_valid($name)) {
+    return FALSE;
+  }
+
+  return jenkins_request("/job/{$name}/{$number}/api/json", $response);
+}
+
+/**
  * Trigger a build for a jenkins job.
  *
  * @param $job
