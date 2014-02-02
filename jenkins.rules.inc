@@ -73,7 +73,7 @@ function jenkins_rules_action_info() {
       'query' => array(
         'type' => 'text',
         'label' => t('Query XML'),
-        'description' => t('Eg. ') . htmlspecialchars('<query><name><![CDATA[[user:name]]]></name><uid><![CDATA[[user:uid]]]></uid></query>'),
+        'description' => t('For example @example', array('@example' => '<query><name><![CDATA[[user:name]]]></name><uid><![CDATA[[user:uid]]]></uid></query>')),
       ),
       'method' => array(
         'type' => 'text',
@@ -87,7 +87,7 @@ function jenkins_rules_action_info() {
       'headers' => array(
         'type' => 'text',
         'label' => t('Header XML'),
-        'description' => t('Eg. ') . htmlspecialchars('<headers><Content-Type><![CDATA[[application/json]]]></Content-Type></headers>'),
+        'description' => t('For example @example', array('@example' => '<headers><Content-Type><![CDATA[[application/json]]]></Content-Type></headers>')),
       ),
     ),
   );

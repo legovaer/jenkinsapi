@@ -113,7 +113,7 @@ function jenkins_job_create($name, $xml, &$response = NULL) {
     'Content-Type' => 'text/xml',
   );
 
-  return jenkins_request('/createItem', $response, $query, 'POST', $xml, $headers);  
+  return jenkins_request('/createItem', $response, $query, 'POST', $xml, $headers);
 }
 
 /**
@@ -193,7 +193,7 @@ function jenkins_job_update($name, $xml, &$response = NULL) {
     'Content-Type' => 'text/xml',
   );
 
-  return jenkins_request("/job/{$name}/config.xml", $response, array(), 'POST', $xml, $headers);  
+  return jenkins_request("/job/{$name}/config.xml", $response, array(), 'POST', $xml, $headers);
 }
 
 /**
@@ -257,19 +257,21 @@ function jenkins_is_job_name_valid($name) {
 /**
  * Perform a request to Jenkins server and return the response.
  *
- * @param $path
- *   API path with leading slash, e.g. '/api/json'.
+ * @param string $path
+ *   API path with leading slash, for example '/api/json'.
+ * @param object $response
+ *   HTTP request response object - see drupal_http_request()
  * @param $query
- *   Array with data to be sent as query string.
- * @param $method
+ *   Data to be sent as query string.
+ * @param string $method
  *   HTTP method, either 'GET' (default) or 'POST'.
- * @param $data
+ * @param array $data
  *   Post data.
- * @param $headers
+ * @param array $headers
  *   HTTP headers.
  *
- * return
- *   Object with results from the server. Or FALSE on failure.
+ * @return bool
+ *    TRUE if the request was successful.
  */
 function jenkins_request($path, &$response = NULL, $query = array(), $method = 'GET', $data = NULL, $headers = array()) {
   $url = variable_get('jenkins_base_url', 'http://localhost:8080') . $path;
@@ -282,7 +284,7 @@ function jenkins_request($path, &$response = NULL, $query = array(), $method = '
     $query['delay'] = '0sec';
   }
 
-  $url .= '?'. drupal_http_build_query($query);
+  $url .= '?' . drupal_http_build_query($query);
 
   if ($method == 'POST' && !empty($data)) {
     $options['data'] = $data;
@@ -333,7 +335,7 @@ function jenkins_parse_args($args) {
 /**
  * Backwards compatible wrapper for jenkins_jobs_get() function.
  *
- * @see jenkins_jobs_get().
+ * @see jenkins_jobs_get()
  * @deprecated
  */
 function jenkins_get_jobs($depth = 0, $tree = NULL) {
@@ -344,7 +346,7 @@ function jenkins_get_jobs($depth = 0, $tree = NULL) {
 /**
  * Backwards compatible wrapper for jenkins_job_get() function.
  *
- * @see jenkins_job_get().
+ * @see jenkins_job_get()
  * @deprecated
  */
 function jenkins_get_job($name) {
@@ -355,7 +357,7 @@ function jenkins_get_job($name) {
 /**
  * Backwards compatible wrapper for jenkins_job_create() function.
  *
- * @see jenkins_job_create().
+ * @see jenkins_job_create()
  * @deprecated
  */
 function jenkins_create_job($name, $xml) {
@@ -366,7 +368,7 @@ function jenkins_create_job($name, $xml) {
 /**
  * Backwards compatible wrapper for jenkins_job_copy() function.
  *
- * @see jenkins_job_copy().
+ * @see jenkins_job_copy()
  * @deprecated
  */
 function jenkins_copy_job($name, $existing) {
