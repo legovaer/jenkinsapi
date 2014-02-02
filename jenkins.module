@@ -9,6 +9,17 @@
  */
 function jenkins_menu() {
   $items = array();
+
+  $items['admin/config/services/jenkins'] = array(
+    'title' => 'Jenkins',
+    'description' => 'Configuration for Jenkins API module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('jenkins_settings'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'jenkins.admin.inc',
+  );
+
   return $items;
 }
 
@@ -19,7 +30,11 @@ function jenkins_permission() {
   $perms = array();
 
   $perms['administer jenkins requests'] = array(
-    'title' => t('Administer Jenkins Requests'),
+    'title' => t('Administer Jenkins requests'),
+  );
+
+  $perms['administer jenkins config'] = array(
+    'title' => t('Administer Jenkins configuration'),
   );
 
   return $perms;

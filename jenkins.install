@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * @file
+ * Jenkins module installation functions.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function jenkins_uninstall() {
+  variable_del('jenkins_base_url');
+}
