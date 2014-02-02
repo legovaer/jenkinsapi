@@ -290,7 +290,7 @@ function jenkins_is_job_name_valid($name) {
  *    TRUE if the request was successful.
  */
 function jenkins_request($path, &$response = NULL, $query = array(), $method = 'GET', $data = NULL, $headers = array()) {
-  $url = variable_get('jenkins_base_url', 'http://localhost:8080') . $path;
+  $url = variable_get('jenkins_base_url', 'http://localhost:8080') . rawurlencode($path);
   $options = array(
     'method' => $method,
   );
