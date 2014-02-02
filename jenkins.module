@@ -53,19 +53,24 @@ function jenkins_build_get($name, $number, &$response = NULL) {
     return FALSE;
   }
 
+  $name = rawurlencode($name);
+  $number = (int) $number;
+
   return jenkins_request("/job/{$name}/{$number}/api/json", $response);
 }
 
 /**
  * Trigger a build for a jenkins job.
  *
- * @param $job
+ * @param $name
  *   Job name.
  */
-function jenkins_job_build($job, $params = NULL, &$response = NULL) {
-  if (!jenkins_is_job_name_valid($job)) {
+function jenkins_job_build($name, $params = NULL, &$response = NULL) {
+  if (!jenkins_is_job_name_valid($name)) {
     return FALSE;
   }
+
+  $name = rawurlencode($name);
 
   $data = array();
   if (is_array($params) && count($params)) {
@@ -78,7 +83,7 @@ function jenkins_job_build($job, $params = NULL, &$response = NULL) {
   $json = 'json=' . json_encode($data);
   $headers = array('Content-Type' => 'application/x-www-form-urlencoded');
 
-  return jenkins_request("/job/{$job}/build", $response, array(), 'POST', $json, $headers);
+  return jenkins_request("/job/{$name}/build", $response, array(), 'POST', $json, $headers);
 }
 
 /**
@@ -121,6 +126,8 @@ function jenkins_job_create($name, $xml, &$response = NULL) {
     return FALSE;
   }
 
+  $name = rawurlencode($name);
+
   $query = array(
     'name' => $name,
   );
@@ -143,6 +150,8 @@ function jenkins_job_delete($name, &$response = NULL) {
     return FALSE;
   }
 
+  $name = rawurlencode($name);
+
   return jenkins_request("/job/{$name}/doDelete", $response, array(), 'POST');
 }
 
@@ -156,6 +165,8 @@ function jenkins_job_disable($name, &$response = NULL) {
   if (!jenkins_is_job_name_valid($name)) {
     return FALSE;
   }
+
+  $name = rawurlencode($name);
 
   return jenkins_request("/job/{$name}/disable", $response, array(), 'POST');
 }
@@ -171,6 +182,8 @@ function jenkins_job_enable($name, &$response = NULL) {
     return FALSE;
   }
 
+  $name = rawurlencode($name);
+
   return jenkins_request("/job/{$name}/enable", $response, array(), 'POST');
 }
 
@@ -184,6 +197,8 @@ function jenkins_job_get($name, &$response = NULL) {
   if (!jenkins_is_job_name_valid($name)) {
     return FALSE;
   }
+
+  $name = rawurlencode($name);
 
   if (jenkins_request("/job/{$name}/api/json", $response)) {
     return json_decode($response->data);
@@ -205,6 +220,8 @@ function jenkins_job_update($name, $xml, &$response = NULL) {
     return FALSE;
   }
 
+  $name = rawurlencode($name);
+
   $headers = array(
     'Content-Type' => 'text/xml',
   );
@@ -225,6 +242,8 @@ function jenkins_jobs_get($depth = 0, $tree = NULL, &$response = NULL) {
   $query = array(
     'depth' => $depth,
   );
+
+  $name = rawurlencode($name);
 
   if (jenkins_request('/api/json', $response, $query)) {
     return json_decode($response->data);
@@ -290,7 +309,7 @@ function jenkins_is_job_name_valid($name) {
  *    TRUE if the request was successful.
  */
 function jenkins_request($path, &$response = NULL, $query = array(), $method = 'GET', $data = NULL, $headers = array()) {
-  $url = variable_get('jenkins_base_url', 'http://localhost:8080') . rawurlencode($path);
+  $url = variable_get('jenkins_base_url', 'http://localhost:8080') . $path;
   $options = array(
     'method' => $method,
   );
