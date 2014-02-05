@@ -8,6 +8,7 @@
  * Implements hook_rules_action_info().
  */
 function jenkins_rules_action_info() {
+  // @ignore style_lowercase_html:function
   $actions = array();
 
   $defaults = array(
