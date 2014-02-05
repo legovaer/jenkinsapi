@@ -62,15 +62,15 @@ function jenkins_build_get($name, $number, &$response = NULL) {
 /**
  * Trigger a build for a jenkins job.
  *
- * @param $name
+ * @param string $job
  *   Job name.
  */
-function jenkins_job_build($name, $params = NULL, &$response = NULL) {
-  if (!jenkins_is_job_name_valid($name)) {
+function jenkins_job_build($job, $params = NULL, &$response = NULL) {
+  if (!jenkins_is_job_name_valid($job)) {
     return FALSE;
   }
 
-  $name = rawurlencode($name);
+  $job = rawurlencode($job);
 
   $data = array();
   if (is_array($params) && count($params)) {
@@ -83,7 +83,7 @@ function jenkins_job_build($name, $params = NULL, &$response = NULL) {
   $json = 'json=' . json_encode($data);
   $headers = array('Content-Type' => 'application/x-www-form-urlencoded');
 
-  return jenkins_request("/job/{$name}/build", $response, array(), 'POST', $json, $headers);
+  return jenkins_request("/job/{$job}/build", $response, array(), 'POST', $json, $headers);
 }
 
 /**
