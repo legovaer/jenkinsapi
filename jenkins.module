@@ -60,12 +60,45 @@ function jenkins_build_get($name, $number, &$response = NULL) {
 }
 
 /**
+ * Extracts the jenkins build id from the HTTP response object.
+ *
+ * @param $repsonse
+ *   The response object returned from drupal_http_request().
+ *
+ * @return int
+ *   The jenkins build id or 0 on error.
+ */
+function jenkins_get_build_id_from_response($response) {
+  $location = $response->headers['location'] . 'api/json';
+  for ($i =0; $i <= 30; ++$i) {
+    $reply = drupal_http_request($location, array('max_redirects' => 0));
+    if (200 != $reply->code) {
+      // Invalid response, so bail out.
+      return 0;
+    }
+
+    $json = json_decode($reply->data);
+    if (isset($json->executable->number)) {
+      return (int) $json->executable->number;
+    }
+
+    // Let's not overload the server.
+    sleep(2);
+  }
+
+  return 0;
+}
+
+/**
  * Trigger a build for a jenkins job.
  *
  * @param string $job
  *   Job name.
+ *
+ * @return int
+ *   The job number, or 0 on error.
  */
-function jenkins_job_build($job, $params = NULL, &$response = NULL) {
+function jenkins_job_build($job, $params = NULL, &$response = NULL, $block = FALSE) {
   if (!jenkins_is_job_name_valid($job)) {
     return FALSE;
   }
@@ -83,7 +116,30 @@ function jenkins_job_build($job, $params = NULL, &$response = NULL) {
   $json = 'json=' . json_encode($data);
   $headers = array('Content-Type' => 'application/x-www-form-urlencoded');
 
-  return jenkins_request("/job/{$job}/build", $response, array(), 'POST', $json, $headers);
+  if (!jenkins_request("/job/{$job}/build", $response, array(), 'POST', $json, $headers)) {
+    return 0;
+  }
+
+  $build_id = jenkins_get_build_id_from_response($response);
+  if (!$block) {
+    return $build_id;
+  }
+
+  while (TRUE) {
+    $build_response = NULL;
+    if (!jenkins_build_get($job, $build_id, $build_response)) {
+      return 0;
+    }
+
+    $json = json_decode($build_response->data);
+    if (!$json->building) {
+      return $build_id;
+    }
+
+    sleep(2);
+  }
+
+  return 0;
 }
 
 /**
@@ -312,6 +368,7 @@ function jenkins_request($path, &$response = NULL, $query = array(), $method = '
   $url = variable_get('jenkins_base_url', 'http://localhost:8080') . $path;
   $options = array(
     'method' => $method,
+    'max_redirects' => 0,
   );
 
   // Force request to start immediately.

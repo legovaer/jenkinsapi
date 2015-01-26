@@ -30,6 +30,19 @@ function jenkins_rules_action_info() {
         'description' => t('The values for parameterized jobs. Each argument should be a separate line with the following format KEY=value. Leave empty for non parameterized jobs.'),
         'optional' => TRUE,
       ),
+      'block' => array(
+        'type' => 'boolean',
+        'label' => t('Block'),
+        'description' => t('Wait until build has completed?  This can cause Drupal requests to time out.'),
+        'optional' => TRUE,
+        'default value' => FALSE,
+      ),
+    ),
+    'provides' => array(
+      'jenkins_build_id' => array(
+        'type' => 'integer',
+        'label' => t('Build Number'),
+      ),
     ),
   );
 
@@ -120,7 +133,7 @@ function jenkins_rules_copy_job($new, $existing) {
 /**
  * Triggers the build of a job.
  */
-function jenkins_rules_job_build($name, $params) {
+function jenkins_rules_job_build($name, $params, $block) {
   $data = NULL;
   $params = trim($params);
 
@@ -132,7 +145,9 @@ function jenkins_rules_job_build($name, $params) {
     }
   }
 
-  jenkins_job_build($name, $data);
+  $response = NULL;
+  $build_id = jenkins_job_build($name, $data, $response, $block);
+  return array('jenkins_build_id' => $build_id);
 }
 
 /**
