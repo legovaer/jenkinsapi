@@ -15,8 +15,7 @@ function jenkins_menu() {
     'description' => 'Configuration for Jenkins API module',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('jenkins_settings'),
-    'access arguments' => array('access administration pages'),
-    'type' => MENU_NORMAL_ITEM,
+    'access arguments' => array('administer jenkins config'),
     'file' => 'jenkins.admin.inc',
   );
 
