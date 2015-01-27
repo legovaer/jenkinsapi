@@ -2,3 +2,5 @@ name = Jenkins
 description = Provide user interface for some Jenkins management tasks.
 core = 7.x
 configure = admin/config/services/jenkins
+scripts[] = jenkins.js
+stylesheets[all][] = jenkins.css

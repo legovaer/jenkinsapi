@@ -20,6 +20,24 @@ function jenkins_menu() {
     'file' => 'jenkins.admin.inc',
   );
 
+  $items['jenkins/log/%/%'] = array(
+    'title' => 'Jenkins log',
+    'description' => 'Stream a jenkins build log',
+    'page callback' => 'jenkins_log',
+    'page arguments' => array(2, 3),
+    'access arguments' => array('jenkins streaming logs'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['jenkins/stream-log/%/%/%'] = array(
+    'title' => 'Stream jenkins log',
+    'description' => 'Stream a jenkins build log',
+    'page callback' => 'jenkins_stream_log',
+    'page arguments' => array(2, 3, 4),
+    'access arguments' => array('jenkins streaming logs'),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
@@ -31,6 +49,10 @@ function jenkins_permission() {
 
   $perms['administer jenkins requests'] = array(
     'title' => t('Administer Jenkins requests'),
+  );
+
+  $perms['jenkins streaming logs'] = array(
+    'title' => t('Jenkins streaming build logs'),
   );
 
   $perms['administer jenkins config'] = array(
@@ -420,4 +442,59 @@ function jenkins_parse_args($args) {
   }
 
   return $values;
+}
+
+/**
+ * Jenkins log page callback.
+ */
+function jenkins_log($name, $build_id) {
+  $response = NULL;
+  jenkins_build_get($name, $build_id, $response);
+
+  if (200 != $response->code) {
+    return t('Log not available at this time');
+  }
+
+  $json = json_decode($response->data);
+
+  if (!$json->building) {
+    $log_response = NULL;
+    jenkins_request("/job/{$name}/{$build_id}/consoleText", $log_response);
+    return '<h2>' . t('Build complete.') . "</h2>\n<pre>" . check_plain($log_response->data) . '</pre>';
+  }
+
+  $settings = array(
+    'name' => $name,
+    'build_id' => (int) $build_id,
+    'offset' => 0,
+  );
+  drupal_add_js(array('jenkins' => $settings), 'setting');
+  return '<h2>' . t('Build running.') . "</h2>\n" . '<div id="jenkins-log"><div id="jenkins-log-data"></div><div id="jenkins-throbber">&nbsp;</div></div>';
+}
+
+/**
+ * Stream a Jenkins log.
+ */
+function jenkins_stream_log($name, $build_id, $offset=0) {
+  $response = NULL;
+  jenkins_request("/job/{$name}/{$build_id}/logText/progressiveText", $response, array('start' => $offset));
+  if (200 != $response->code) {
+    return t('Log not available at this time');
+  }
+
+  $done = TRUE;
+  if (!empty($response->headers['x-more-data'])) {
+    $done = FALSE;
+  }
+
+  $log = $response->data;
+  $offset = (int) $response->headers['x-text-size'];
+
+  $output = array(
+    'done' => $done,
+    'log' => $log,
+    'offset' => $offset,
+  );
+
+  return drupal_json_output($output);
 }
