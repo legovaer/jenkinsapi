@@ -2,7 +2,7 @@
 
   var updateLog = function(data) {
 
-    $('#jenkins-log-data').append(Drupal.checkPlain(data.log));
+    $('#jenkins-log pre').append(Drupal.checkPlain(data.log));
 
     var d = $(document);
     d.scrollTop(d.height());
@@ -13,7 +13,7 @@
     }
     else {
       $('#jenkins-throbber').hide();
-      $('#jenkins-log').append('<h2>' + Drupal.t("Build complete.") + '</h2>');
+      $('#jenkins-log h2').text(Drupal.t("Build complete."));
     }
   };
 
