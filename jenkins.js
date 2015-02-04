@@ -25,7 +25,7 @@
 
   Drupal.behaviors.jenkinsLog = {
     attach: function (context, settings) {
-      if ($('#jenkins-log', context)) {
+      if ($('#jenkins-log', context).length) {
         pollLog();
       }
     }
