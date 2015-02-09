@@ -2,18 +2,26 @@
 
   var updateLog = function(data) {
 
-    $('#jenkins-log pre').append(Drupal.checkPlain(data.log));
+    var e = $('#jenkins-log');
 
-    var d = $(document);
-    d.scrollTop(d.height());
+    $('pre', e).append(Drupal.checkPlain(data.log));
+
+    var p = e.parent();
+    if ('cboxLoadedContent' == p.attr('id')) {
+      p.scrollTop(e.height());
+    }
+    else {
+      var d = $(document);
+      d.scrollTop(d.height());
+    }
 
     if (!data.done) {
       Drupal.settings.jenkins.offset = parseInt(data.offset);
-      setTimeout(pollLog, 2000);
+      setTimeout(pollLog, 1000);
     }
     else {
-      $('#jenkins-throbber').hide();
-      $('#jenkins-log h2').text(Drupal.t("Build complete."));
+      $('#jenkins-throbber', e).hide();
+      $('h2', e).text(Drupal.t("Build complete"));
     }
   };
 
@@ -25,7 +33,7 @@
 
   Drupal.behaviors.jenkinsLog = {
     attach: function (context, settings) {
-      if ($('#jenkins-log', context)) {
+      if ($('#jenkins-log', context).length) {
         pollLog();
       }
     }
