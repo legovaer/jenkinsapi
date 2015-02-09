@@ -39,6 +39,10 @@ function jenkins_rules_action_info() {
       ),
     ),
     'provides' => array(
+      'jenkins_job_name' => array(
+        'type' => 'text',
+        'label' => t('Job Name'),
+      ),
       'jenkins_build_id' => array(
         'type' => 'integer',
         'label' => t('Build Number'),
@@ -104,6 +108,7 @@ function jenkins_rules_copy_job($new, $existing) {
  * Triggers the build of a job.
  */
 function jenkins_rules_job_build($name, $params, $block) {
+
   $data = NULL;
   $params = trim($params);
 
@@ -117,5 +122,9 @@ function jenkins_rules_job_build($name, $params, $block) {
 
   $response = NULL;
   $build_id = jenkins_job_build($name, $data, $response, $block);
-  return array('jenkins_build_id' => $build_id);
+  $vars = array(
+    'jenkins_build_id' => (int) $build_id,
+    'jenkins_job_name' => $name,
+  );
+  return $vars;
 }
