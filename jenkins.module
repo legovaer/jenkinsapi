@@ -471,7 +471,7 @@ function jenkins_log($name, $build_id) {
     'offset' => 0,
   );
   drupal_add_js(array('jenkins' => $settings), 'setting');
-  return '<div id="jenkins-log"><h2>' . t('Build running.') . '</h2><pre></pre><div id="jenkins-throbber">&nbsp;</div></div>';
+  return '<div id="jenkins-log"><h2>' . t('Build running') . '</h2><pre></pre><div id="jenkins-throbber">&nbsp;</div></div>';
 }
 
 /**
