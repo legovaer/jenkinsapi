@@ -125,6 +125,7 @@ function jenkins_job_build($job, $params = NULL, &$response = NULL, $block = FAL
   }
 
   $job = rawurlencode($job);
+  $url = "/job/{$job}/build";
 
   $data = array();
   if (is_array($params) && count($params)) {
@@ -132,12 +133,14 @@ function jenkins_job_build($job, $params = NULL, &$response = NULL, $block = FAL
     foreach ($params as $name => $value) {
       $data['parameter'][] = array('name' => urlencode($name), 'value' => urlencode($value));
     }
+    $url .= 'WithParameters';
   }
 
   $json = 'json=' . json_encode($data);
   $headers = array('Content-Type' => 'application/x-www-form-urlencoded');
 
-  if (!jenkins_request("/job/{$job}/build", $response, array(), 'POST', $json, $headers)) {
+
+  if (!jenkins_request($url, $response, array(), 'POST', $json, $headers)) {
     return 0;
   }
 
