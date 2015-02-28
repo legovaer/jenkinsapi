@@ -81,50 +81,116 @@ function jenkins_build_get($name, $number, &$response = NULL) {
 }
 
 /**
- * Extracts the jenkins build id from the HTTP response object.
+ * Retrieves full Jenkins build log for a job.
  *
- * @param $repsonse
+ * @param string $name
+ *   The name of the Jenkins job.
+ * @param int $number
+ *   The job build number.
+ *
+ * @return object
+ *   The http_request() response object.
+ */
+function jenkins_build_get_log($name, $number, &$response = NULL) {
+  $response = NULL;
+  return jenkins_request("/job/{$name}/{$number}/consoleText", $response);
+}
+
+/**
+ * Returns the path to a Jenkins build log based on the queue id.
+ *
+ * @todo throw an exceptions on error or pending.
+ *
+ * @param int $queue_id
+ *   The queue id to use for the lookup.
+ *
+ * @return array
+ *   Information about the current state of the item in the queue.
+ */
+function jenkins_get_build_info_from_queue_id($queue_id) {
+
+  $state = array(
+    'error' => FALSE,
+    'building' => FALSE,
+    'message' => '',
+    'build_id' => 0,
+  );
+
+  $url = variable_get('jenkins_base_url', 'http://localhost:8080') . "/queue/item/{$queue_id}/api/json";
+
+  $reply = drupal_http_request($url, array('max_redirects' => 0));
+  if (200 != $reply->code) {
+    // Assume 404.
+    $state['error'] = TRUE;
+    $state['message'] = t('Build completed.');
+    return $state;
+  }
+
+  $json = json_decode($reply->data);
+  if (isset($json->executable->number)) {
+    // We are building.
+    $state['building'] = TRUE;
+    $state['build_id'] = (int) $json->executable->number;
+    return $state;
+  }
+
+  // This explains why it is still waiting.
+  if (isset($json->why)) {
+    $state['message'] = $json->why;
+    return $state;
+  }
+
+  $state['error'] = TRUE;
+  $state['message'] = t('Unknown error.');
+  return $state;
+}
+
+/**
+ * Extracts the jenkins build queue id from the HTTP response object.
+ *
+ * @todo throw exception if queue id isn't available.
+ *
+ * @param object $response
  *   The response object returned from drupal_http_request().
  *
  * @return int
- *   The jenkins build id or 0 on error.
+ *   The jenkins queue id or 0 on error.
  */
-function jenkins_get_build_id_from_response($response) {
-  $location = $response->headers['location'] . 'api/json';
-  for ($i =0; $i <= 30; ++$i) {
-    $reply = drupal_http_request($location, array('max_redirects' => 0));
-    if (200 != $reply->code) {
-      // Invalid response, so bail out.
-      return 0;
-    }
+function jenkins_get_queue_id_from_response($response) {
 
-    $json = json_decode($reply->data);
-    if (isset($json->executable->number)) {
-      return (int) $json->executable->number;
-    }
-
-    // Let's not overload the server.
-    sleep(2);
+  if (!isset($response->headers['location'])) {
+    return 0;
   }
 
-  return 0;
+  $location = $response->headers['location'];
+
+  $matches = array();
+  if (!preg_match('#/queue/item/(\d+)/$#', $location, $matches)) {
+    return 0;
+  }
+
+  $id = $matches[1];
+  if (!is_numeric($id)) {
+    return 0;
+  }
+
+  return $id;
 }
 
 /**
  * Trigger a build for a jenkins job.
  *
  * @param string $job
- *   Job name.
+ *   Job name. Must be URL encoded.
  *
  * @return int
  *   The job number, or 0 on error.
  */
-function jenkins_job_build($job, $params = NULL, &$response = NULL, $block = FALSE) {
+function jenkins_job_build($job, $params = NULL, &$response = NULL) {
   if (!jenkins_is_job_name_valid($job)) {
-    return FALSE;
+    return 0;
   }
 
-  $job = rawurlencode($job);
   $url = "/job/{$job}/build";
 
   $data = array();
@@ -139,31 +205,12 @@ function jenkins_job_build($job, $params = NULL, &$response = NULL, $block = FAL
   $json = 'json=' . json_encode($data);
   $headers = array('Content-Type' => 'application/x-www-form-urlencoded');
 
-
   if (!jenkins_request($url, $response, array(), 'POST', $json, $headers)) {
     return 0;
   }
 
-  $build_id = jenkins_get_build_id_from_response($response);
-  if (!$block) {
-    return $build_id;
-  }
-
-  while (TRUE) {
-    $build_response = NULL;
-    if (!jenkins_build_get($job, $build_id, $build_response)) {
-      return 0;
-    }
-
-    $json = json_decode($build_response->data);
-    if (!$json->building) {
-      return $build_id;
-    }
-
-    sleep(2);
-  }
-
-  return 0;
+  $queue_id = jenkins_get_queue_id_from_response($response);
+  return $queue_id;
 }
 
 /**
@@ -454,14 +501,17 @@ function jenkins_log($name, $build_id) {
   jenkins_build_get($name, $build_id, $response);
 
   if (200 != $response->code) {
-    return t('Log not available at this time');
+    return t('Log not available at this time.');
   }
 
   $json = json_decode($response->data);
 
   if (!$json->building) {
     $log_response = NULL;
-    jenkins_request("/job/{$name}/{$build_id}/consoleText", $log_response);
+    if (!jenkins_build_get_log($name, $build_id, $log_response)) {
+      return '<h2>' . t('Error retrieving log.') . '</h2>';
+    }
+
     return '<h2>' . t('Build complete.') . "</h2>\n<pre>" . check_plain($log_response->data) . '</pre>';
   }
 
@@ -477,7 +527,7 @@ function jenkins_log($name, $build_id) {
 /**
  * Stream a Jenkins log.
  */
-function jenkins_stream_log($name, $build_id, $offset=0) {
+function jenkins_stream_log($name, $build_id, $offset = 0) {
   $response = NULL;
   jenkins_request("/job/{$name}/{$build_id}/logText/progressiveText", $response, array('start' => $offset));
   if (200 != $response->code) {

@@ -30,10 +30,16 @@ function jenkins_rules_action_info() {
         'description' => t('The values for parameterized jobs. Each argument should be a separate line with the following format KEY=value. Leave empty for non parameterized jobs.'),
         'optional' => TRUE,
       ),
-      'block' => array(
+      'folder' => array(
+        'type' => 'text',
+        'label' => t('Folder'),
+        'description' => t('The name of the folder for the job. Leave empty for jobs not in folders.'),
+        'optional' => TRUE,
+      ),
+      'error_is_fatal' => array(
+        'label' => t('Error is fatal'),
         'type' => 'boolean',
-        'label' => t('Block'),
-        'description' => t('Wait until build has completed?  This can cause Drupal requests to time out.'),
+        'description' => t('Fatal errors prevent further actions from firing.'),
         'optional' => TRUE,
         'default value' => FALSE,
       ),
@@ -43,7 +49,7 @@ function jenkins_rules_action_info() {
         'type' => 'text',
         'label' => t('Job Name'),
       ),
-      'jenkins_build_id' => array(
+      'jenkins_queue_id' => array(
         'type' => 'integer',
         'label' => t('Build Number'),
       ),
@@ -107,12 +113,15 @@ function jenkins_rules_copy_job($new, $existing) {
 /**
  * Triggers the build of a job.
  */
-function jenkins_rules_job_build($name, $params, $block) {
-
+function jenkins_rules_job_build($name, $params, $folder, $error_is_fatal) {
   $data = NULL;
   $params = trim($params);
 
-  // Ensure we have a valid data.
+  $name = rawurlencode($name);
+  if ($folder) {
+    $name = rawurlencode($folder) . '/job/' . $name;
+  }
+
   if (strlen($params)) {
     $json = jenkins_parse_args($params);
     if (NULL !== $json) {
@@ -121,9 +130,9 @@ function jenkins_rules_job_build($name, $params, $block) {
   }
 
   $response = NULL;
-  $build_id = jenkins_job_build($name, $data, $response, $block);
+  $queue_id = jenkins_job_build($name, $data, $response);
   $vars = array(
-    'jenkins_build_id' => (int) $build_id,
+    'jenkins_queue_id' => (int) $queue_id,
     'jenkins_job_name' => $name,
   );
   return $vars;
