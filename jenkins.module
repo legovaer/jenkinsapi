@@ -24,7 +24,7 @@ function jenkins_menu() {
     'description' => 'Stream a jenkins build log',
     'page callback' => 'jenkins_log',
     'page arguments' => array(2, 3),
-    'access arguments' => array('jenkins streaming logs'),
+    'access arguments' => array('view jenkins streaming logs'),
     'type' => MENU_CALLBACK,
   );
 
@@ -33,7 +33,7 @@ function jenkins_menu() {
     'description' => 'Stream a jenkins build log',
     'page callback' => 'jenkins_stream_log',
     'page arguments' => array(2, 3, 4),
-    'access arguments' => array('jenkins streaming logs'),
+    'access arguments' => array('view jenkins streaming logs'),
     'type' => MENU_CALLBACK,
   );
 
@@ -50,7 +50,7 @@ function jenkins_permission() {
     'title' => t('Administer Jenkins requests'),
   );
 
-  $perms['jenkins streaming logs'] = array(
+  $perms['view jenkins streaming logs'] = array(
     'title' => t('Jenkins streaming build logs'),
   );
 
