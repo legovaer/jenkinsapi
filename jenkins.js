@@ -27,7 +27,8 @@
 
   var pollLog = function() {
     settings = Drupal.settings.jenkins;
-    url = '/jenkins/stream-log/' + settings.name + '/' + settings.build_id + '/' + settings.offset;
+    url = Drupal.settings.basePath + '?q=jenkins/stream-log/' + settings.name
+      + '/' + settings.build_id + '/' + settings.offset;
     $.get(url, null, updateLog);
   };
 
