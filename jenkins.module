@@ -199,7 +199,6 @@ function jenkins_job_build($job, $params = NULL, &$response = NULL) {
     foreach ($params as $name => $value) {
       $data['parameter'][] = array('name' => urlencode($name), 'value' => urlencode($value));
     }
-    $url .= 'WithParameters';
   }
 
   $json = 'json=' . json_encode($data);
