@@ -14,7 +14,7 @@ function jenkins_settings($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Jenkins server URL'),
     '#description' => t('HTTP auth credentials can be included in the URL, like so "http://user:pass@example.com:8080". Note: The value isn\'t encrypted when stored'),
-    '#default_value' => variable_get('jenkins_base_url', 'http://localhost:8080'),
+    '#default_value' => \Drupal::config('jenkins.settings')->get('base_url'),
     '#required' => TRUE,
   );
 
@@ -57,7 +57,10 @@ function jenkins_settings_validate($form, &$form_state) {
  * Jenkins settings form submit handler.
  */
 function jenkins_settings_submit($form, &$form_state) {
-  variable_set('jenkins_base_url', $form_state['values']['jenkins_base_url']);
+  $config = \Drupal::service('config.factory')->getEditable('jenkins.settings');
+
+  $config->set('base_url', $form_state['values']['jenkins_base_url']);
+  $config->save();
   // Lifted from system_settings_form_submit().
   drupal_set_message(t('The configuration options have been saved.'));
 }
@@ -66,7 +69,7 @@ function jenkins_settings_submit($form, &$form_state) {
  * Jenkins connection test button submit handler.
  */
 function jenkins_settings_test_submit($form, &$form_state) {
-  $current = variable_get('jenkins_base_url');
+  $current = \Drupal::config('jenkins.settings')->get('base_url');
   drupal_set_message(t('Drupal was able to connect to @url.', array('@url' => $form_state['values']['jenkins_base_url'])));
   if ($form_state['values']['jenkins_base_url'] != $current) {
     drupal_set_message(t('New URL value has not been saved. Please use the "Save" button to save the value permenantly.'), 'warning');

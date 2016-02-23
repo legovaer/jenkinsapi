@@ -95,7 +95,7 @@ function jenkins_get_build_info_from_queue_id($queue_id) {
     'build_id' => 0,
   );
 
-  $url = variable_get('jenkins_base_url', 'http://localhost:8080') . "/queue/item/{$queue_id}/api/json";
+  $url = \Drupal::config('jenkins.settings')->get('base_url') . "/queue/item/{$queue_id}/api/json";
 
   $reply = drupal_http_request($url, array('max_redirects' => 0));
   if (200 != $reply->code) {
@@ -414,7 +414,7 @@ function jenkins_is_job_name_valid($name) {
  *    TRUE if the request was successful.
  */
 function jenkins_request($path, &$response = NULL, $query = array(), $method = 'GET', $data = NULL, $headers = array()) {
-  $url = variable_get('jenkins_base_url', 'http://localhost:8080') . $path;
+  $url = \Drupal::config('jenkins.settings')->get('base_url') . $path;
   $options = array(
     'method' => $method,
     'max_redirects' => 0,
