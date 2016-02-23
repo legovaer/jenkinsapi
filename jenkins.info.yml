@@ -1,0 +1,6 @@
+name: Jenkins
+type: module
+description: 'Provide user interface for some Jenkins management tasks.'
+version: VERSION
+core: 8.x
+configure: jenkins.admin_settings
