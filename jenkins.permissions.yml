@@ -1,0 +1,8 @@
+administer jenkins requests:
+  title: 'Administer Jenkins requests'
+
+view jenkins streaming logs:
+  title: 'Jenkins streaming build logs'
+
+administer jenkins config:
+  title: 'Administer Jenkins configuration'
