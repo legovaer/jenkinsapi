@@ -41,27 +41,6 @@ function jenkins_menu() {
 }
 
 /**
- * Implements hook_permission().
- */
-function jenkins_permission() {
-  $perms = array();
-
-  $perms['administer jenkins requests'] = array(
-    'title' => t('Administer Jenkins requests'),
-  );
-
-  $perms['view jenkins streaming logs'] = array(
-    'title' => t('Jenkins streaming build logs'),
-  );
-
-  $perms['administer jenkins config'] = array(
-    'title' => t('Administer Jenkins configuration'),
-  );
-
-  return $perms;
-}
-
-/**
  * Get a single build.
  *
  * @param string $name
