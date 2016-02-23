@@ -1,5 +1,5 @@
 #jenkins-throbber {
-  background-image: url('images/throbber.gif');
+  background-image: url('../images/throbber.gif');
   height: 16px;
   width: 16px;
 }
