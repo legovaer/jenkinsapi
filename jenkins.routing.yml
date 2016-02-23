@@ -1,0 +1,8 @@
+jenkins.service_form:
+  path: /admin/config/services/jenkins
+  defaults:
+    _title: Jenkins
+    _description: Configuration for Jenkins API module
+    _form: \Drupal\jenkins\Form\JenkinsServiceForm
+  requirements:
+    _permission: 'administer jenkins config'

@@ -10,15 +10,6 @@
 function jenkins_menu() {
   $items = array();
 
-  $items['admin/config/services/jenkins'] = array(
-    'title' => 'Jenkins',
-    'description' => 'Configuration for Jenkins API module',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('jenkins_settings'),
-    'access arguments' => array('administer jenkins config'),
-    'file' => 'jenkins.admin.inc',
-  );
-
   $items['jenkins/log/%/%'] = array(
     'title' => 'Jenkins log',
     'description' => 'Stream a jenkins build log',
