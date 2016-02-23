@@ -1,0 +1,16 @@
+jenkins.buildstatus:
+  version: VERSION
+  js:
+    jenkins.js: {}
+  css:
+    theme:
+      css/jenkins.css
+  dependencies:
+    - core/jquery
+    - core/drupal
+
+admin:
+  version: VERSION
+  css:
+    theme:
+      css/color.admin.css: {}
