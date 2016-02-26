@@ -9,6 +9,7 @@ namespace Drupal\jenkins\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * Jenkins Service form.
@@ -82,17 +83,15 @@ class JenkinsServiceForm extends ConfigFormBase {
    *   An associative array containing the structure of the form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
-   *
-   * @todo Replace drupal_http_request() with Guzzle.
-   *
-   * @see https://www.drupal.org/node/2673940
    */
   public function validateUrl(array &$form, FormStateInterface $form_state) {
-    $response = drupal_http_request($form_state['values']['jenkins_base_url']);
-    if (!empty($response->error)) {
+    try {
+      \Drupal::httpClient()->get($form_state->getValue('jenkins_base_url'));
+    }
+    catch (RequestException $e) {
       $values = array(
         '@url' => $form_state->getValue('base_url'),
-        '@error' => $response->error,
+        '@error' => $e->getMessage(),
       );
       $form_state->setErrorByName('base_url', $this->t('Unable to contact jenkins server at "@url". Response: "@error".', $values));
     }

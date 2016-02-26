@@ -1,4 +1,4 @@
-jenkins.buildstatus:
+buildstatus:
   version: VERSION
   js:
     jenkins.js: {}

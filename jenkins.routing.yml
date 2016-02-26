@@ -6,3 +6,21 @@ jenkins.service_form:
     _form: \Drupal\jenkins\Form\JenkinsServiceForm
   requirements:
     _permission: 'administer jenkins config'
+
+jenkins.log:
+  path: /jenkins/log/{name}/{buildid}
+  defaults:
+    _title: 'Jenkins log'
+    _description: 'Stream a jenkins build log'
+    _controller: \Drupal\jenkins\Controller\JenkinsController::log
+  requirements:
+    _permission: 'view jenkins streaming logs'
+
+jenkins.stream:
+  path: /jenkins/stream-log/{name}/{buildid}/{offset}
+  defaults:
+    _title: 'Stream jenkins log'
+    _description: 'Stream a jenkins build log'
+    _controller: \Drupal\jenkins\Controller\JenkinsController::strem
+  requirements:
+    _permission: 'view jenkins streaming logs'

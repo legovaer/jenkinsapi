@@ -1,0 +1,8 @@
+services:
+  jenkins.job:
+    class: Drupal\jenkins\JenkinsJob
+    arguments: ['@jenkins.client']
+
+  jenkins.client:
+    class: Drupal\jenkins\JenkinsClient
+    arguments: ['@config.factory']
