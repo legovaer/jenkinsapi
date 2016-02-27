@@ -10,7 +10,7 @@ tasks can be triggered by rules events.  Do not use the deprecated
 
 The default configuration for this module assumes that your Jenkins server is
 listening at http://localhost:8080.  If your server is running elsewhere, then
-you need to set the "jenkins\_base\_url" variable, with drush vset of add the
+you need to set the "jenkins\_base\_url" variable, with drush vset or add the
 following line in your settings.php file.
 
     $conf['jenkins_base_url'] = 'http://jenkins.example.com:8080';
@@ -18,5 +18,7 @@ following line in your settings.php file.
 Alternatively you can configure the jenkins server at admin/config/services/jenkins.
 The admin page allows you to check connectivity to the jenkins server.
 
-Initial development of the Jenkins API module was sponsored by Technocrat. 
-This module is maintained by [Dave Hall Consulting](http://davehall.com.au)
+Initial development of the Jenkins API module was sponsored by Technocrat. The
+port of the Drupal 8 version of this module was sponsored by
+[Capgemini](https://www.drupal.org/capgemini). This module is maintained by
+[Dave Hall Consulting](http://davehall.com.au)

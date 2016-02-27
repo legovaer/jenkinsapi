@@ -10,7 +10,6 @@ namespace Drupal\jenkins;
 
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use GuzzleHttp\Exception\RequestException;
 
 
 class JenkinsClient {
@@ -23,7 +22,7 @@ class JenkinsClient {
   protected $config;
 
   public function __construct(ConfigFactoryInterface $config_factory) {
-    $this->config = $config_factory;
+    $this->config = $config_factory->get('jenkins.settings');
   }
 
   /**
@@ -60,18 +59,14 @@ class JenkinsClient {
     }
 
     // Default to JSON unless otherwise specified.
-    $options['headers'] += [
+    $default_headers = [
       'Accept' => 'application/json',
       'Content-Type' => 'application/json',
     ];
+    array_merge($options['headers'], $default_headers);
 
     // Do HTTP request and get response object.
-    try {
-      $url = $url =  $this->config->get('base_url') . $uri . '?' . UrlHelper::buildQuery($options['query']);
-      return \Drupal::httpClient()->get($url, $options);
-    }
-    catch (RequestException $e) {
-      return FALSE;
-    }
+    $url = $this->config->get('base_url') . $uri . '?' . UrlHelper::buildQuery($options['query']);
+    return \Drupal::httpClient()->get($url, $options);
   }
 }

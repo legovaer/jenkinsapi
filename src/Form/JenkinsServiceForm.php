@@ -37,7 +37,7 @@ class JenkinsServiceForm extends ConfigFormBase {
     $config = $this->config('jenkins.settings');
 
     $form['base_url'] = [
-      '#type' => '#url',
+      '#type' => 'url',
       '#title' => $this->t('Jenkins server URL'),
       '#description' => $this->t('HTTP auth credentials can be included in the URL, like so "http://user:pass@example.com:8080". Note: The value isn\'t encrypted when stored'),
       '#default_value' => $config->get('base_url'),
@@ -86,7 +86,7 @@ class JenkinsServiceForm extends ConfigFormBase {
    */
   public function validateUrl(array &$form, FormStateInterface $form_state) {
     try {
-      \Drupal::httpClient()->get($form_state->getValue('jenkins_base_url'));
+      \Drupal::httpClient()->get($form_state->getValue('base_url'), ['verify' => false]);
     }
     catch (RequestException $e) {
       $values = array(
@@ -111,8 +111,8 @@ class JenkinsServiceForm extends ConfigFormBase {
    */
   public function testConnection(array &$form, FormStateInterface $form_state) {
     $config = $this->config('jenkins.settings');
-    drupal_set_message($this->t('Drupal was able to connect to @url.', array('@url' => $form_state['values']['jenkins_base_url'])));
-    if ($form_state['values']['jenkins_base_url'] != $config->get('base_url')) {
+    drupal_set_message($this->t('Drupal was able to connect to @url.', array('@url' => $form_state->getValue('base_url'))));
+    if ($form_state->getValue('base_url') != $config->get('base_url')) {
       drupal_set_message($this->t('New URL value has not been saved. Please use the "Save" button to save the value permanently.'), 'warning');
     }
   }

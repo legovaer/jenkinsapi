@@ -220,6 +220,28 @@ class JenkinsJob {
   }
 
   /**
+   * Stream the current build information.
+   *
+   * @param string $name
+   *   The name of the Jenkins job.
+   * @param int $build_id
+   *   The number of the build.
+   * @param int $offset
+   *   The offset of the build log.
+   *
+   * @return \Psr\Http\Message\ResponseInterface
+   */
+  public function stream($name, $build_id, $offset = 0) {
+    $this->assertValidName($name);
+    $options = [
+      'data' => [
+        'start' => $offset,
+      ],
+    ];
+    return $this->client->request("/job/{$name}/{$build_id}/logText/progressiveText", $options);
+  }
+
+  /**
    * Get a single build.
    *
    * @param string $name
@@ -229,9 +251,9 @@ class JenkinsJob {
    *
    * @return \Psr\Http\Message\ResponseInterface
    */
-  public function getBuild($name, $number) {
-    $number = (int) $number;
-    return $this->client->request("/job/{$name}/{$number}/api/json");
+  public function getBuild($name, $build_id) {
+    $build_id = (int) $build_id;
+    return $this->client->request("/job/{$name}/{$build_id}/api/json");
   }
 
   /**
